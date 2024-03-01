@@ -3,22 +3,17 @@ package com.innoventes.test.app.controller;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
+import com.innoventes.test.app.repository.CompanyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.innoventes.test.app.dto.CompanyDTO;
@@ -39,6 +34,9 @@ public class CompanyController {
 
 	@Autowired
 	private MessageSource messageSource;
+
+	@Autowired
+	private CompanyRepository companyRepository;
 
 	@GetMapping("/companies")
 	public ResponseEntity<List<CompanyDTO>> getAllCompanies() {
@@ -85,6 +83,30 @@ public class CompanyController {
 
 	public String getMessage(String exceptionCode) {
 		return messageSource.getMessage(exceptionCode, null, LocaleContextHolder.getLocale());
+	}
+
+	@GetMapping("/companies/{id}")
+	public ResponseEntity<CompanyDTO> getCompanyByid(@PathVariable long id) {
+		Optional<Company> company = companyRepository.findById(id);
+		CompanyDTO response = new CompanyDTO();
+		if(company.isPresent()){
+			response = companyMapper.getCompanyDTO(company.get());
+		}
+
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+		return ResponseEntity.status(HttpStatus.OK).location(location).body(response);
+	}
+
+	@GetMapping("/companies")
+	public ResponseEntity<CompanyDTO> getCompanyByCompanyCode(@RequestParam String companyCode) {
+		Optional<Company> company = companyRepository.findByCompanyCode(companyCode);
+		CompanyDTO response = new CompanyDTO();
+		if(company.isPresent()){
+			response = companyMapper.getCompanyDTO(company.get());
+		}
+
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+		return ResponseEntity.status(HttpStatus.OK).location(location).body(response);
 	}
 
 }
