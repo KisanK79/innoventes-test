@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -39,9 +40,14 @@ public class CompanyController {
 	private CompanyRepository companyRepository;
 
 	@GetMapping("/companies")
-	public ResponseEntity<List<CompanyDTO>> getAllCompanies() {
+	public ResponseEntity<List<CompanyDTO>> getAllCompanies(@RequestParam("companyCode") String companyCode) {
 		List<Company> companyList = companyService.getAllCompanies();
-		
+
+		// if companyCode is passed then filter by it or return all.
+		if(null != companyCode){
+			companyList = companyList.stream().filter(cmp -> cmp.getCompanyCode().equalsIgnoreCase(companyCode)).collect(Collectors.toList());
+		}
+
 		List<CompanyDTO> companyDTOList = new ArrayList<CompanyDTO>();
 		
 		for (Company entity : companyList) {
@@ -97,16 +103,6 @@ public class CompanyController {
 		return ResponseEntity.status(HttpStatus.OK).location(location).body(response);
 	}
 
-	@GetMapping("/companies")
-	public ResponseEntity<CompanyDTO> getCompanyByCompanyCode(@RequestParam String companyCode) {
-		Optional<Company> company = companyRepository.findByCompanyCode(companyCode);
-		CompanyDTO response = new CompanyDTO();
-		if(company.isPresent()){
-			response = companyMapper.getCompanyDTO(company.get());
-		}
 
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
-		return ResponseEntity.status(HttpStatus.OK).location(location).body(response);
-	}
 
 }
